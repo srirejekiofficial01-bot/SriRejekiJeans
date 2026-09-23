@@ -34,6 +34,19 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Fix Kotlin dependency conflict
+        run: |
+          cat > kotlin-fix.gradle <<'EOF'
+          allprojects {
+              configurations.all {
+                  resolutionStrategy.eachDependency { details ->
+                      if (details.requested.group == "org.jetbrains.kotlin") {
+                          details.useVersion "1.8.22"
+                      }
+                  }
+              }
+          }
+          EOF
 
       - name: Build APK
         run: |
@@ -42,9 +55,9 @@ jobs:
           cd "$PROJECT"
           if [ -f gradlew ]; then
             chmod +x gradlew
-            ./gradlew assembleDebug
+            ./gradlew --init-script "$GITHUB_WORKSPACE/kotlin-fix.gradle" assembleDebug
           else
-            gradle assembleDebug
+            gradle --init-script "$GITHUB_WORKSPACE/kotlin-fix.gradle" assembleDebug
           fi
 
       - name: Upload APK
