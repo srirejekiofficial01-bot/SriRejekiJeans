@@ -20,7 +20,10 @@ jobs:
         run: |
           echo "Mencari project Android..."
           find source -name settings.gradle -o -name settings.gradle.kts
-
+      - name: Enable AndroidX
+        run: |
+          PROJECT=$(dirname "$(find source -name settings.gradle -o -name settings.gradle.kts | head -1)")
+          cp gradle.properties "$PROJECT/gradle.properties"
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
