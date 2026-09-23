@@ -1,0 +1,51 @@
+name: Build Sri Rejeki Jeans APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract source
+        run: |
+          mkdir source
+          unzip -q SriRejekiJeans_Android_Source.zip -d source
+
+      - name: Find Android project
+        run: |
+          echo "Mencari project Android..."
+          find source -name settings.gradle -o -name settings.gradle.kts
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build APK
+        run: |
+          PROJECT=$(dirname "$(find source -name settings.gradle -o -name settings.gradle.kts | head -1)")
+          echo "Project: $PROJECT"
+          cd "$PROJECT"
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          else
+            gradle assembleDebug
+          fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SriRejekiJeans-APK
+          path: source/**/app/build/outputs/apk/debug/*.apk
